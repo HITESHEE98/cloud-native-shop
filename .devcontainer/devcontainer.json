@@ -1,0 +1,13 @@
+{
+  "name": "cloud-native-shop",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": { "version": "20" },
+    "ghcr.io/devcontainers/features/python:1": { "version": "3.11" },
+    "ghcr.io/devcontainers/features/aws-cli:1": {},
+    "ghcr.io/devcontainers/features/terraform:1": { "version": "1.9.x" },
+    "ghcr.io/devcontainers/features/kubectl-helm-minikube:1": {
+      "helm": "latest", "kubectl": "latest", "installMinikube": "false"
+    }
+  }
+}
