@@ -17,6 +17,8 @@ jobs:
     defaults:
       run:
         working-directory: microservices/user-service
+    env:
+      PYTHONPATH: ${{ github.workspace }}/microservices/user-service   # <— make app importable
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -30,6 +32,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           python -m pip install -r requirements.txt httpx pytest
+
       - name: Run tests
         run: pytest -q tests
 
@@ -38,7 +41,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      packages: write   # needed to push to GHCR
+      packages: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
