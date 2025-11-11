@@ -1,0 +1,68 @@
+name: user-service CI
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - "microservices/user-service/**"
+      - ".github/workflows/user-service-ci.yml"
+  pull_request:
+    branches: [ "main" ]
+    paths:
+      - "microservices/user-service/**"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: microservices/user-service
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install deps (incl. pytest + httpx)
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt httpx pytest
+      - name: Run tests
+        run: pytest -q tests
+
+  build_and_push:
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write   # needed to push to GHCR
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set image name
+        id: meta
+        run: |
+          REPO_OWNER_LC=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          echo "IMAGE=ghcr.io/${REPO_OWNER_LC}/user-service" >> $GITHUB_OUTPUT
+
+      - name: Build and push (latest + sha)
+        uses: docker/build-push-action@v6
+        with:
+          context: ./microservices/user-service
+          push: true
+          tags: |
+            ${{ steps.meta.outputs.IMAGE }}:latest
+            ${{ steps.meta.outputs.IMAGE }}:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
