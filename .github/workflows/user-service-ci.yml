@@ -18,7 +18,7 @@ jobs:
       run:
         working-directory: microservices/user-service
     env:
-      PYTHONPATH: ${{ github.workspace }}/microservices/user-service   # <— make app importable
+      PYTHONPATH: ${{ github.workspace }}/microservices/user-service
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -45,6 +45,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          driver: docker-container   # enables cache backend
 
       - name: Log in to GHCR
         uses: docker/login-action@v3
