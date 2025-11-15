@@ -1,4 +1,4 @@
-name: ci: product-service tests → build → push to GHCR
+name: ci-product-service
 
 on:
   push:
