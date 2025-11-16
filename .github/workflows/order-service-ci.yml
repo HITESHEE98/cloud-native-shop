@@ -1,4 +1,5 @@
-name: ci: order-service tests + build + push to GHCR
+name: "ci: order-service tests + build + push to GHCR"
+
 
 on:
   push:
