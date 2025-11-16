@@ -1,0 +1,64 @@
+name: ci: order-service tests + build + push to GHCR
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - "microservices/order-service/**"
+      - ".github/workflows/order-service-ci.yml"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          pip install -r microservices/order-service/requirements.txt
+          pip install pytest
+
+      - name: Run tests
+        run: |
+          PYTHONPATH=microservices/order-service pytest -q microservices/order-service/tests
+
+  build_and_push:
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set image name
+        id: meta
+        run: |
+          OWNER_LC=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          IMAGE_NAME=ghcr.io/${OWNER_LC}/order-service
+          echo "image_name=${IMAGE_NAME}" >> $GITHUB_OUTPUT
+
+      - name: Build & Push Image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./microservices/order-service
+          push: true
+          tags: |
+            ${{ steps.meta.outputs.image_name }}:latest
+            ${{ steps.meta.outputs.image_name }}:${{ github.sha }}
