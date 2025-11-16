@@ -11,7 +11,7 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Set up Python
@@ -19,14 +19,16 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Install dependencies
+      - name: Install deps (incl. pytest + httpx)
         run: |
-          pip install -r microservices/order-service/requirements.txt
-          pip install pytest
+          python -m pip install --upgrade pip
+          python -m pip install -r microservices/order-service/requirements.txt
+          python -m pip install pytest httpx
 
       - name: Run tests
+        working-directory: microservices/order-service
         run: |
-          PYTHONPATH=microservices/order-service pytest -q microservices/order-service/tests
+          PYTHONPATH=. pytest -q tests
 
   build_and_push:
     needs: test
@@ -37,7 +39,7 @@ jobs:
       id-token: write
 
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Log in to GHCR
@@ -51,10 +53,9 @@ jobs:
         id: meta
         run: |
           OWNER_LC=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
-          IMAGE_NAME=ghcr.io/${OWNER_LC}/order-service
-          echo "image_name=${IMAGE_NAME}" >> $GITHUB_OUTPUT
+          echo "image_name=ghcr.io/${OWNER_LC}/order-service" >> "$GITHUB_OUTPUT"
 
-      - name: Build & Push Image
+      - name: Build and push (latest + sha)
         uses: docker/build-push-action@v6
         with:
           context: ./microservices/order-service
