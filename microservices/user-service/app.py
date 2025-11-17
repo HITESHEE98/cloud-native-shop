@@ -3,6 +3,7 @@ import time
 from fastapi import FastAPI
 from fastapi.responses import PlainTextResponse
 from prometheus_client import CollectorRegistry, Counter, Gauge, generate_latest, CONTENT_TYPE_LATEST
+from fastapi.middleware.cors import CORSMiddleware
 
 SERVICE_NAME = os.getenv("SERVICE_NAME", "user")
 
@@ -14,6 +15,14 @@ REQ_TOTAL = Counter("http_requests_total", "Total HTTP requests", ["service", "p
 UP_GAUGE = Gauge("service_up", "Service up (1=up,0=down)", ["service"], registry=registry)
 START_TIME = time.time()
 UP_GAUGE.labels(service=SERVICE_NAME).set(1)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],          
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.middleware("http")
 async def metrics_middleware(request, call_next):
