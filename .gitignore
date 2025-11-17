@@ -33,3 +33,6 @@ override.tf.json
 # Editors
 .vscode/
 .idea/
+
+aws/
+awslcv2.zip
